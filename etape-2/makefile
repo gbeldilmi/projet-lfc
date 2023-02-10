@@ -12,7 +12,7 @@ LEX_OUTPUT    := lex.yy.c
 BUILD_DIR     := build
 CC            := gcc
 C_FLAGS       := -v -Wall -Wextra -lfl -O3
-C_FILE        := $(BUILD_DIR)/lex.yy.c
+C_FILE        := $(BUILD_DIR)/$(LEX_OUTPUT)
 BIN_FILE      := $(BUILD_DIR)/$(EXEC)
 
 TEST_DIR			:= tests
