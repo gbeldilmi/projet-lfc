@@ -1,0 +1,135 @@
+################################################################################
+################################################################################
+#### Groupe p12 : Etape 3                                                   ####
+################################################################################
+################################################################################
+
+
+################################################################################
+################################################################################
+####   Liste des tokens                                                     ####
+################################################################################
+################################################################################
+
+
+Débuts de blocs (BV---) :
+    BVCAL : début calendrier
+    BVEVE : début événement
+    BVALA : début alarme
+
+Fins de blocs (EV---) :
+    EVCAL : fin calendrier
+    EVEVE : fin événement
+    EVALA : fin alarme
+
+Intros (I----) :
+    IHDEU : intro heure début evt unique
+    IHFEU : intro heure fin evt unique
+    ITITR : intro titre
+    ILIEU : intro lieu
+    IDESC : intro description
+    IPOSA : intro position alarme
+    IHDER : intro heure début evt répétitif
+    IHFER : intro heure fin evt répétitif
+    IRREP : intro règle répétition
+    IFREQ : intro fréquence
+    ICOMP : intro compteur
+    ILJRS : intro liste jours
+    ILIMI : intro limite
+    IHDEJ : intro heure début evt journée
+    IHFEJ : intro heure fin evt journée
+
+Valeurs (V----) :
+    VDHEU : date et heure evt unique
+    VTLDE : titre/lieu/description
+    VPOSA : position alarme
+    VDHER : date et heure evt répétitif
+    VFREQ : frequence
+    VNENT : nombre entier
+    VLJRS : liste jours
+    VCHGS : changement de semaine
+    VDTEJ : date evt journée
+
+Séparateur (SEP--) :
+    SEPOP : séparateur d’options
+
+Propriétés (P----) :
+    PHDEU : propriété heure début evt unique
+    PHFEU : propriété heure fin evt unique
+    PTITR : propriété titre
+    PLIEU : propriété lieu
+    PDESC : propriété description
+    PPOSA : propriété position alarme
+    PHDER : propriété heure début evt répétitif
+    PHFER : propriété heure fin evt répétitif
+    PRREP : propriété règle répétition
+    PFREQ : propriété fréquence
+    PCOMP : propriété compteur
+    PLJRS : propriété liste jours
+    PLIMI : propriété limite
+    PHDEJ : propriété heure début evt journée
+    PHFEJ : propriété heure fin evt journée
+
+Blocs de contenus (BLC--):
+    BLCCA : bloc de contenu ayant un calendrier comme parent
+    BLCEV : bloc de contenu ayant un événement comme parent
+    BLCAL : bloc de contenu ayant une alarme comme parent
+
+Objets (OB---):
+    OBCAL : objet appartenant à un bloc contenu dans le calendrier
+    OBEVE : objet appartenant à un bloc contenu dans un événement
+    OBALA : objet appartenant à un bloc contenu dans une alarme
+
+Axiome :
+    AXIOM : axiome de la grammaire
+
+
+################################################################################
+################################################################################
+####   Grammaire                                                            ####
+################################################################################
+################################################################################
+
+
+Axiome :
+    AXIOM --> BVCAL BLCCA EVCAL
+
+Blocs de contenus: 
+    BLCCA --> BLCCA OBCAL 
+            | OBCAL
+    BLCEV --> BLCEV OBEVE
+            | OBEVE
+    BLCAL --> BLCAL OBALA
+            | OBALA
+
+Objets :
+    OBVCA --> BVEVE BLCEV EVEVE
+    OBEVE --> BVALA BLCAL BVALA
+            | PHDEU
+            | PHFEU
+            | PDESC
+            | PLIEU
+            | PTITR
+            | PHDER
+            | PHFER
+            | PHDEJ
+            | PHFEJ
+    OBALA --> PPOSA
+
+Propriétés : 
+    PHDEU --> IHDEU VDHEU
+    PHFEU --> IHFEU VDHEU
+    PTITR --> ITITR VTLDE
+    PLIEU --> ILIEU VTLDE
+    PDESC --> IDESC VTLDE
+    PPOSA --> IPOSA VPOSA
+    PHDER --> IHDER VDHER
+    PHFER --> IHFER VDHER
+    PRREP --> IRREP PFREQ SEPOP VCHGS SEPOP PCOMP SEPOP PLJRS
+            | IRREP PFREQ SEPOP PLIMI
+    PFREQ --> IFREQ VFREQ
+    PCOMP --> ICOMP VNENT
+    PLJRS --> ILJRS VLJRS
+    PLIMI --> ILIMI VDHEU
+    PHDEJ --> IHDEJ VDTEJ
+    PHFEJ --> IHFEJ VDTEJ
