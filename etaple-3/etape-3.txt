@@ -114,7 +114,11 @@ Objets :
             | PHFER
             | PHDEJ
             | PHFEJ
-    OBALA --> PPOSA
+    OBALA --> PPOSA     # Ici, le sujet nous demande ne nous interesser qu'à la
+                        # propriété "TRIGGER" d'une alarme. Cependant, il est
+                        # possible de définir une alarme avec une propriété
+                        # "DESCRIPTION", on aurait donc pu écrire :
+                        # OBALA --> PPOSA | PDESC
 
 Propriétés : 
     PHDEU --> IHDEU VDHEU
