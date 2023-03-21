@@ -95,3 +95,8 @@ int main()
   yyparse();
   return 0;
 }
+
+void yyerror(char *s)
+{
+  printf("Erreur : %s", s);
+}
