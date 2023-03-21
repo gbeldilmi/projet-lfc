@@ -27,7 +27,7 @@ BIN_FILE     := $(EXEC)
 all : $(BIN_FILE)
 
 clean :
-	rm -v *.o *.c *.h *.output
+	rm -v *.o *.c *.h *.output $(BIN_FILE)
 
 re : clean all
 
