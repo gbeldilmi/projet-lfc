@@ -93,6 +93,7 @@ repetition :
 int main()
 {
   yyparse();
+  printf("\nFin.\n");
   return 0;
 }
 
