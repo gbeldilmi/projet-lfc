@@ -8,6 +8,7 @@
   void yyerror(char *s);
   void print_table(table *t);
   void validate();
+  int last_empty();
 %}
 
 %token DEBCAL FINCAL DEBEVT FINEVT IDEBEVTU IFINEVTU ITITRE ILIEU IDESCR DEBAL FINAL TRIGGER RRULE FREQ COUNT BYDAY UNTIL WKST VALFREQ PV DEBEVTR FINEVTR DEBEVTJ FINEVTJ POSAL DATEVTJ NOMBRE DATEVTR DATEVTU LISTJ TEXTE
@@ -26,38 +27,88 @@ evenement :
   DEBEVT infos_evenement FINEVT ;
 
 infos_evenement :
-  infos_evenement_unique
-  | infos_evenement_repetitif
-  | infos_evenement_journalier ;
+  infos_evenement_unique {
+    y->t[last_empty()][1] = UNIQ;
+  }
+  | infos_evenement_repetitif {
+    y->t[last_empty()][1] = REPET;
+  }
+  | infos_evenement_journalier {
+    y->t[last_empty()][1] = JOURNEE;
+  };
 
 infos_evenement_unique :
-  IDEBEVTU DATEVTU IFINEVTU DATEVTU suite_infos_evenement ;
+  IDEBEVTU DATEVTU IFINEVTU DATEVTU suite_infos_evenement {
+    int l = last_empty();
+    y->t[l][1] = FIN;
+    y->t[l - 1][1] = DEBUT;
+  };
 
 suite_infos_evenement :
   les_textes liste_alarmes ;
 
 les_textes :
-  IDESCR TEXTE ILIEU TEXTE ITITRE TEXTE ;
+  IDESCR TEXTE ILIEU TEXTE ITITRE TEXTE {
+    int l = last_empty();
+    y->t[l][1] = TITRE;
+    y->t[l - 1][1] = LIEU;
+    y->t[l - 2][1] = DESCR;
+    
+  };
 
 infos_evenement_repetitif :
-  DEBEVTR DATEVTR FINEVTR DATEVTR repetition suite_infos_evenement ;
+  DEBEVTR DATEVTR FINEVTR DATEVTR repetition suite_infos_evenement {
+    int l = last_empty();
+    y->t[l][1] = FIN;
+    y->t[l - 1][1] = DEBUT;
+  };
 
 infos_evenement_journalier :
-  DEBEVTJ DATEVTJ FINEVTJ DATEVTJ suite_infos_evenement ;
+  DEBEVTJ DATEVTJ FINEVTJ DATEVTJ suite_infos_evenement {
+    int l = last_empty();
+    y->t[l][1] = FIN;
+    y->t[l - 1][1] = DEBUT;
+  };
 
 liste_alarmes :
   alarme liste_alarmes
   | ;
 
 alarme :
-  DEBAL TRIGGER POSAL FINAL ;
+  DEBAL TRIGGER POSAL FINAL {
+    int l = last_empty();
+    y->t[l][1] = ALARM;
+  };
 
-repetition :
-  RRULE FREQ VALFREQ PV WKST PV COUNT NOMBRE PV BYDAY LISTJ
-  | RRULE FREQ VALFREQ PV UNTIL DATEVTU
-  | RRULE FREQ VALFREQ PV WKST PV UNTIL DATEVTU
-  | RRULE FREQ VALFREQ PV UNTIL DATEVTU PV BYDAY LISTJ
-  | RRULE FREQ VALFREQ PV WKST PV UNTIL DATEVTU PV BYDAY LISTJ ;
+repetition : // LISTJ DATEVTU NOMBRE VALFREQ
+  RRULE FREQ VALFREQ PV WKST PV COUNT NOMBRE PV BYDAY LISTJ {
+    int l = last_empty();
+    y->t[l][1] = JOURS;
+    y->t[l - 1][1] = NBREP;
+    y->t[l - 2][1] = REP;
+  }
+  | RRULE FREQ VALFREQ PV UNTIL DATEVTU {
+    int l = last_empty();
+    y->t[l][1] = FINREP;
+    y->t[l - 1][1] = REP;
+  }
+  | RRULE FREQ VALFREQ PV WKST PV UNTIL DATEVTU {
+    int l = last_empty();
+    y->t[l][1] = FINREP;
+    y->t[l - 1][1] = REP;
+  }
+  | RRULE FREQ VALFREQ PV UNTIL DATEVTU PV BYDAY LISTJ {
+    int l = last_empty();
+    y->t[l][1] = JOURS;
+    y->t[l - 1][1] = FINREP;
+    y->t[l - 2][1] = REP;
+  }
+  | RRULE FREQ VALFREQ PV WKST PV UNTIL DATEVTU PV BYDAY LISTJ {
+    int l = last_empty();
+    y->t[l][1] = JOURS;
+    y->t[l - 1][1] = FINREP;
+    y->t[l - 2][1] = REP;
+  };
 
 %%
 
@@ -91,7 +142,8 @@ void init()
 
 void yyerror(char *s)
 {
-  printf("Erreur : %s", s);
+  printf("Erreur : %s\n\n", s);
+  print_table(y);
 }
 
 void print_table(table *t)
@@ -102,15 +154,29 @@ void print_table(table *t)
   {
     for (j = 0; j < 5; j++)
     {
-      // long long int
-      printf("%*d ", 6, t->t[i][j]);
+      printf("%*d ", 8, t->t[i][j]);
     }
     printf("\n");
   }
 }
 
+int last_empty() // dernière ligne avec le second élément avec la valeur EMPTY
+{
+  int i;
+  for (i = y->ts - 1; i >= 0; i--)
+  {
+    if (y->t[i][1] == EMPTY)
+    {
+      return i;
+    }
+  }
+  printf("Erreur : pas de ligne vide.\n");
+  exit(1);
+}
+
+
 void validate()
 {
   print_table(y);
-  //
+  ////////////////////////////////////////////////////////////////// à completer 
 }

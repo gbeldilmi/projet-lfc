@@ -19,8 +19,21 @@
 #define FRQ 8
 
 #define UNIQ 101
-#define DEBUT 102
-#define FIN 103
+#define REPET 102
+#define JOURNEE 103
+#define DEBUT 104
+#define FIN 105
+#define DESCR 106
+#define LIEU 107
+#define TITRE 108
+#define ALARM 109
+#define REP 110
+#define JOURS 111
+#define FINREP 112
+#define NBREP 113
+
+
+#define IDK 181818
 
 typedef struct {
 	int **t;

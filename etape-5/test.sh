@@ -2,3 +2,4 @@
 
 make
 ./analyseur < exemple_complet.ical 
+make clean
