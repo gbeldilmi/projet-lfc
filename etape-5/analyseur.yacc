@@ -7,8 +7,9 @@
   void init();
   void yyerror(char *s);
   void print_table(table *t);
-  void validate();
   int last_empty();
+  void validate();
+  void translate();
 %}
 
 %token DEBCAL FINCAL DEBEVT FINEVT IDEBEVTU IFINEVTU ITITRE ILIEU IDESCR DEBAL FINAL TRIGGER RRULE FREQ COUNT BYDAY UNTIL WKST VALFREQ PV DEBEVTR FINEVTR DEBEVTJ FINEVTJ POSAL DATEVTJ NOMBRE DATEVTR DATEVTU LISTJ TEXTE
@@ -117,6 +118,7 @@ int main()
   init();
   yyparse();
   validate();
+  translate();
   printf("\nFin.\n");
   return 0;
 }
@@ -178,5 +180,11 @@ int last_empty() // dernière ligne avec le second élément avec la valeur EMPT
 void validate()
 {
   print_table(y);
+  ////////////////////////////////////////////////////////////////// à completer 
+}
+
+
+void translate()
+{
   ////////////////////////////////////////////////////////////////// à completer 
 }
