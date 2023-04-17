@@ -3,27 +3,10 @@
 	#include "y.tab.h"
 
 	extern table *y;
+	extern int yyval;
 
-	#define NONE -1LL
-	#define CAL 0
-	#define EVT 1
-	#define ALA 2
-	#define DAT 3
-	#define TXT 4
-	#define LJR 5
-	#define NUM 6
-	#define TRG 7
-	#define FRQ 8
-	/* 
-	#define UNIQ 
-	#define DEBUT 
-	#define FIN 
-	*/
-
-	long long int b = NONE;
-	long long int c = 0, d = 0;
-	void fill(long long int a, char *txt);
-
+	int b = EMPTY, c = -1, d = 0;
+	void fill(int a, char *txt);
 %}
 
 %start LIGNEOK
@@ -196,43 +179,55 @@ END:VEVENT	{
 
 %%
 
-void fill(long long int a, char *txt)
+void fill(int a, char *txt)
 {
-	long long int *n = (long long int *) malloc(5 * sizeof(long long int));
+	int *n = (int *) malloc(5 * sizeof(int));
 	if (n) {
 		n[0] = a;
 		n[1] = b;
 		if (txt) {
 			n[2] = c;
 			n[3] = (y) ? y->us : 0;
-			n[4] = (txt) ? (long long int) strlen(yytext) : NONE;
+			n[4] = (int) strlen(yytext);
 		} else {
 			n[2] = n[3] = n[4] = NONE;
 		}
-	}
-	if (!y) {
-		y = (table *) calloc(1, sizeof(table));
-		y->ts++;
-		y->t = (long long int **) malloc(y->ts * sizeof(long long int*));
-		y->us++;
-		y->u = (char *) calloc(y->us, sizeof(char));
 	} else {
-		y->ts++;
-		long long int **nt = (long long int **) malloc(y->ts * sizeof(long long int*));
-		for (int i = 0; y->ts; i++){
+		printf("Erreur allocation mémoire\n");
+		exit(1);
+	}
+	
+	y->ts++;
+	int **nt = (int **) malloc(y->ts * sizeof(int*));
+	if (nt) {
+		if (txt) {
+			char *nu = (char *) calloc(y->us + (int) strlen(txt), sizeof(char));
+			if (nu) {
+				// copie des anciens
+				strcpy(nu, y->u);
+				// ajout du nouveau
+				strcat(nu, txt);
+				// libération de l'ancien et affectation du nouveau
+				free((void *) y->u);
+				y->u = nu;
+				y->us = (int) strlen(y->u);
+			} else {
+				printf("Erreur allocation mémoire\n");
+				exit(1);
+			}
+		}
+		// copie des anciens
+		for (int i = 0; i < y->ts - 1; i++){
 			nt[i] = y->t[i];
 		}
+		// ajout du nouveau
+		nt[y->ts-1] = n;
+		// libération de l'ancien et affectation du nouveau
 		free((void *) y->t);
 		y->t = nt;
-		if (txt) {
-			y->us+=strlen(txt);
-			char *nu = (char *) calloc(y->us, sizeof(char));
-			strcpy(nu, y->u);
-			strcpy(nu, txt);
-			free((void *) y->u);
-			y->u = nu;
-		}
+	} else {
+		printf("Erreur allocation mémoire\n");
+		exit(1);
 	}
-	y->t[y->ts-1] = n;
-	yyval = c;
+	yyval = c; 
 }

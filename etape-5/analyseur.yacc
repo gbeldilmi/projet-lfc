@@ -2,8 +2,11 @@
 	#include "analyseur.h"
 
   table *y;
+  int yyval;
 
+  void init();
   void yyerror(char *s);
+  void print_table(table *t);
   void validate();
 %}
 
@@ -60,10 +63,30 @@ repetition :
 
 int main()
 {
+  init();
   yyparse();
   validate();
   printf("\nFin.\n");
   return 0;
+}
+
+void init()
+{
+  y = (table *) malloc(sizeof(table));
+  if (y == NULL)
+  {
+    printf("Erreur d'allocation mémoire.\n");
+    exit(1);
+  }
+	y->ts = 0;
+	y->t = (int **) malloc(y->ts * sizeof(int*));
+	y->us = 0;
+	y->u = (char *) malloc(y->us * sizeof(char));
+  if (y->t == NULL || y->u == NULL)
+  {
+    printf("Erreur d'allocation mémoire.\n");
+    exit(1);
+  }
 }
 
 void yyerror(char *s)
@@ -71,6 +94,23 @@ void yyerror(char *s)
   printf("Erreur : %s", s);
 }
 
-void validate() {
+void print_table(table *t)
+{
+  int i, j;
+  printf("------- table -------\n1D str :\n%s\n---------------------\n2D str :\n", t->u);
+  for (i = 0; i < t->ts; i++)
+  {
+    for (j = 0; j < 5; j++)
+    {
+      // long long int
+      printf("%*d ", 6, t->t[i][j]);
+    }
+    printf("\n");
+  }
+}
+
+void validate()
+{
+  print_table(y);
   //
 }
