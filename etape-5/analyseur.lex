@@ -196,12 +196,11 @@ void fill(int a, char *txt)
 		printf("Erreur allocation mémoire\n");
 		exit(1);
 	}
-	
 	y->ts++;
 	int **nt = (int **) malloc(y->ts * sizeof(int*));
 	if (nt) {
 		if (txt) {
-			char *nu = (char *) calloc(y->us + (int) strlen(txt), sizeof(char));
+			char *nu = (char *) calloc(y->us + (int) strlen(txt) + 1, sizeof(char));
 			if (nu) {
 				// copie des anciens
 				strcpy(nu, y->u);

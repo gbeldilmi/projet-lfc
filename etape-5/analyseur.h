@@ -26,7 +26,7 @@
 #define DESCR 106
 #define LIEU 107
 #define TITRE 108
-#define ALARM 109
+#define ALAR 109
 #define REP 110
 #define JOURS 111
 #define FINREP 112
