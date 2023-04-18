@@ -1,14 +1,16 @@
 %{
 	#include "analyseur.h"
-
   table *y;
   int yyval;
-
   void init();
   void yyerror(char *s);
   void print_table(table *t);
   int last_empty();
   void validate();
+  void check_dates();
+  void check_dates_fin_deb();
+  void check_dates_lim_deb();
+  void check_alarms();
   int get_element(int e, int v);
   int get_elementi(int e, int v, int k);
   int event_exists(int e);
@@ -18,23 +20,21 @@
   void print_lstr(FILE *f, char *p, int l);
   int scan_jrs(int l);
   int print_alarm(FILE *f, int l);
+  static int ft_charcmp(int c1, int c2);
+  int ft_strcmp(const char *s1, const char *s2);
+  int ft_strequ(const char *s1, const char *s2);
+  int ft_strncmp(const char *s1, const char *s2, size_t n);
 %}
-
 %token DEBCAL FINCAL DEBEVT FINEVT IDEBEVTU IFINEVTU ITITRE ILIEU IDESCR DEBAL FINAL TRIGGER RRULE FREQ COUNT BYDAY UNTIL WKST VALFREQ PV DEBEVTR FINEVTR DEBEVTJ FINEVTJ POSAL DATEVTJ NOMBRE DATEVTR DATEVTU LISTJ TEXTE
 %start fichier
-
 %%
-
 fichier :
   DEBCAL liste_evenements FINCAL ;
-
 liste_evenements : 
   evenement liste_evenements
   | ;
-
 evenement :
   DEBEVT infos_evenement FINEVT ;
-
 infos_evenement :
   infos_evenement_unique {
     y->t[last_empty()][1] = UNIQ;
@@ -45,17 +45,14 @@ infos_evenement :
   | infos_evenement_journalier {
     y->t[last_empty()][1] = JOURNEE;
   };
-
 infos_evenement_unique :
   IDEBEVTU DATEVTU IFINEVTU DATEVTU suite_infos_evenement {
     int l = last_empty();
     y->t[l][1] = FIN;
     y->t[l - 1][1] = DEBUT;
   };
-
 suite_infos_evenement :
   les_textes liste_alarmes ;
-
 les_textes :
   IDESCR TEXTE ILIEU TEXTE ITITRE TEXTE {
     int l = last_empty();
@@ -64,31 +61,26 @@ les_textes :
     y->t[l - 2][1] = DESCR;
     
   };
-
 infos_evenement_repetitif :
   DEBEVTR DATEVTR FINEVTR DATEVTR repetition suite_infos_evenement {
     int l = last_empty();
     y->t[l][1] = FIN;
     y->t[l - 1][1] = DEBUT;
   };
-
 infos_evenement_journalier :
   DEBEVTJ DATEVTJ FINEVTJ DATEVTJ suite_infos_evenement {
     int l = last_empty();
     y->t[l][1] = FIN;
     y->t[l - 1][1] = DEBUT;
   };
-
 liste_alarmes :
   alarme liste_alarmes
   | ;
-
 alarme :
   DEBAL TRIGGER POSAL FINAL {
     int l = last_empty();
     y->t[l][1] = ALAR;
   };
-
 repetition : // LISTJ DATEVTU NOMBRE VALFREQ
   RRULE FREQ VALFREQ PV WKST PV COUNT NOMBRE PV BYDAY LISTJ {
     int l = last_empty();
@@ -118,9 +110,7 @@ repetition : // LISTJ DATEVTU NOMBRE VALFREQ
     y->t[l - 1][1] = FINREP;
     y->t[l - 2][1] = REP;
   };
-
 %%
-
 int main()
 {
   init();
@@ -130,7 +120,6 @@ int main()
   printf("\nFin.\n");
   return 0;
 }
-
 void init()
 {
   y = (table *) malloc(sizeof(table));
@@ -149,13 +138,11 @@ void init()
     exit(1);
   }
 }
-
 void yyerror(char *s)
 {
   printf("Erreur : %s\n\n", s);
   print_table(y);
 }
-
 void print_table(table *t)
 {
   int i, j;
@@ -169,7 +156,6 @@ void print_table(table *t)
     printf("\n");
   }
 }
-
 int last_empty() // dernière ligne avec le second élément avec la valeur EMPTY
 {
   int i;
@@ -183,19 +169,78 @@ int last_empty() // dernière ligne avec le second élément avec la valeur EMPT
   printf("Erreur : pas de ligne vide.\n");
   exit(1);
 }
-
-
 void validate()
 {
   print_table(y);
-  ////////////////////////////////////////////////////////////////// à completer 
+  check_dates();
+  check_dates_fin_deb();
+  check_dates_lim_deb();
+  check_alarms();
 }
-
+void check_dates()
+{
+  /////////////////////////// Vérifier la validité de chaque date
+}
+void check_dates_fin_deb()
+{
+  // Pour chaque événement, vérifier que la date de fin est bien postérieure à la date de début.
+  int e = 0, i, j;
+  while (event_exists(e))
+  {
+    j = get_element(e, FINREP);
+    if (j != -1) 
+    {
+      i = get_element(e, DEBUT);
+      if (ft_strncmp(y->u + y->t[i][3], y->u + y->t[j][3], y->t[i][4]) > 0)
+      {
+        printf("Erreur : date d'expiration antérieure à la date de début.\nOccurence %d et %d de l'évènement %d.\n", i, j, e);
+        exit(1);
+      }
+    }
+    e++;
+  }
+}
+void check_dates_lim_deb()
+{
+  // Pour chaque événement répétitif avec date limite, vérifier que la date limite est bien postérieure à la date de début
+  int e = 0, i, j;
+  while (event_exists(e))
+  {
+    i = get_element(e, DEBUT);
+    j = get_element(e, FIN);
+    if (ft_strncmp(y->u + y->t[i][3], y->u + y->t[j][3], y->t[i][4]) > 0)
+    {
+      printf("Erreur : date de fin antérieure à la date de début.\nOccurence %d et %d de l'évènement %d.\n", i, j, e);
+      exit(1);
+    }
+    e++;
+  }
+}
+void check_alarms()
+{
+  int e = 0, i, j, k, l;
+  while (event_exists(e))
+  {
+    i = j = 0;
+    while ((k = get_elementi(e, ALAR, i)) != -1)
+    {
+      for (j = i + 1; (l = get_elementi(e, ALAR, j)) != -1; j++)
+      {
+        if (ft_strncmp(y->u + y->t[k][3], y->u + y->t[l][3], y->t[k][4]) == 0)
+        {
+          printf("Erreur : alarmes identiques.\nOccurence %d et %d de l'évènement %d.\n", i, j, e);
+          exit(1);
+        }
+      }
+      i++;
+    }
+    e++;
+  }
+}
 int get_element(int e, int v)
 {
   return get_elementi(e, v, 0);
 }
-
 int get_elementi(int e, int v, int k)
 {
   int i;
@@ -213,7 +258,6 @@ int get_elementi(int e, int v, int k)
   }
   return -1;
 }
-
 int event_exists(int e)
 {
   int i;
@@ -226,8 +270,6 @@ int event_exists(int e)
   }
   return 0;
 }
-
-
 void translate()
 {
   FILE *f = fopen("calendrier.html", "w");
@@ -399,7 +441,6 @@ void translate()
     "</div>\n</body>\n</html>\n", event, unique, repetitif, journee);
   fclose(f);
 }
-
 void print_date(FILE *f, int l)
 {
   print_lstr(f, y->u + y->t[l][3] + 6, 2);
@@ -408,7 +449,6 @@ void print_date(FILE *f, int l)
   fprintf(f, "/");
   print_lstr(f, y->u + y->t[l][3], 4);
 }
-
 void print_heure(FILE *f, int l)
 {
   print_lstr(f, y->u + y->t[l][3] + 9, 2);
@@ -417,7 +457,6 @@ void print_heure(FILE *f, int l)
   fprintf(f, ":");
   print_lstr(f, y->u + y->t[l][3] + 13, 2);
 }
-
 void print_lstr(FILE *f, char *p, int l)
 {
   while (l--)
@@ -425,7 +464,6 @@ void print_lstr(FILE *f, char *p, int l)
     fprintf(f, "%c", *p++);
   }
 }
-
 int scan_jrs(int l)
 {
   int i = 0, o = y->t[l][3];
@@ -463,7 +501,6 @@ int scan_jrs(int l)
   }
   return i;
 }
-
 int print_alarm(FILE *f, int l)
 {
   int p = y->t[l][3];
@@ -473,4 +510,61 @@ int print_alarm(FILE *f, int l)
   }
   p++;
   print_lstr(f, y->u + p, y->t[l][3] + y->t[l][4] - p);
+}
+static int ft_charcmp(int c1, int c2)
+{
+  if (c1 > c2)
+  {
+    return (1);
+  }
+  else if (c1 < c2)
+  {
+    return (-1);
+  }
+  return (0);
+}
+int ft_strcmp(const char *s1, const char *s2)
+{
+  size_t i;
+
+  i = 0;
+  while (s1[i] && s2[i])
+  {
+    if (s1[i] == s2[i])
+    {
+      i++;
+    }
+    else
+    {
+      break;
+    }
+  }
+  return (ft_charcmp(s1[i], s2[i]));
+}
+int ft_strequ(const char *s1, const char *s2)
+{
+  if (!s1 || !s2)
+  {
+    return (0);
+  }
+  return (!ft_strcmp(s1, s2));
+}
+int ft_strncmp(const char *s1, const char *s2, size_t n)
+{
+  size_t i;
+
+  i = 0;
+  if (n == 0)
+  {
+    return (0);
+  }
+  while (s1[i] && s2[i] && i < n - 1)
+  {
+    if (s1[i] != s2[i])
+    {
+      break;
+    }
+    i++;
+  }
+  return (s1[i] - s2[i]);
 }
