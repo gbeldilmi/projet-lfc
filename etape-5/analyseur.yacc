@@ -8,6 +8,7 @@
   int last_empty();
   void validate();
   void check_dates();
+  void check_date(int i, int f);
   void check_dates_fin_deb();
   void check_dates_lim_deb();
   void check_alarms();
@@ -179,7 +180,76 @@ void validate()
 }
 void check_dates()
 {
-  /////////////////////////// Vérifier la validité de chaque date
+  // Vérifier la validité de chaque date
+  int e = 0, i, j, k, l = 0, f;
+  while (event_exists(e))
+  {
+    while (l < y->ts && l != -1)
+    {
+      if (y->t[l][0] != EVT) {
+        l++;
+      } else {
+        break;
+      }
+    }
+    if (l == -1)
+    {
+      break;
+    }
+    i = get_element(e, DEBUT);
+    j = get_element(e, FIN);
+    f = (y->t[l][1] == JOURNEE) ? 1 : 0;
+    if (i == -1 || j == -1)
+    {
+      printf("Erreur : évènement %d sans date de début ou de fin.\n", e);
+      exit(1);
+    }
+    k = get_element(e, FINREP);
+    check_date(i, f);
+    check_date(j, f);
+    if (k != -1)
+    {
+      check_date(k, f);
+    }
+    e++;l++;
+  }
+}
+void check_date(int i, int jounee)
+{
+  // YYYYMMDDTHHMMSS(Z)
+  // MM entre 01 et 12
+  if (ft_strncmp(y->u + y->t[i][3] + 4, "01", 2) < 0 || ft_strncmp(y->u + y->t[i][3] + 4, "12", 2) > 0)
+  {
+    printf("Erreur : mois invalide.\nOccurence %d.\n", i);
+    exit(1);
+  }
+  // DD entre 01 et 31
+  if (ft_strncmp(y->u + y->t[i][3] + 6, "01", 2) < 0 || ft_strncmp(y->u + y->t[i][3] + 6, "31", 2) > 0)
+  {
+    printf("Erreur : jour invalide.\nOccurence %d.\n", i);
+    exit(1);
+  }
+  if (jounee == 0)
+  {
+    // HH entre 00 et 23
+    if (ft_strncmp(y->u + y->t[i][3] + 9, "00", 2) < 0 || ft_strncmp(y->u + y->t[i][3] + 9, "23", 2) > 0)
+    {
+      printf("Erreur : heures invalide.\nOccurence %d.\n", i);
+      exit(1);
+    }
+    // MM entre 00 et 59
+    if (ft_strncmp(y->u + y->t[i][3] + 11, "00", 2) < 0 || ft_strncmp(y->u + y->t[i][3] + 11, "59", 2) > 0)
+    {
+      printf("Erreur : minutes invalide.\nOccurence %d.\n", i);
+      exit(1);
+    }
+    // SS entre 00 et 59
+    if (ft_strncmp(y->u + y->t[i][3] + 13, "00", 2) < 0 || ft_strncmp(y->u + y->t[i][3] + 13, "59", 2) > 0)
+    {
+      printf("Erreur : secondes invalide.\nOccurence %d.\n", i);
+      exit(1);
+    }
+  }
 }
 void check_dates_fin_deb()
 {
